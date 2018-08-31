@@ -104,7 +104,6 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     string public  name;
     uint8 public decimals;
     uint public _totalSupply;
-    address public masterAddress;
 
     mapping(address => uint) balances;
     mapping(address => mapping(address => uint)) allowed;
@@ -118,16 +117,15 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
         name = "GG Token";
         decimals = 9;
         _totalSupply = 1000000000;
-        masterAddress = 0x627306090abaB3A6e1400e9345bC60c78a8BEf57;
-        balances[masterAddress] = _totalSupply;
-        emit Transfer(address(0), masterAddress, _totalSupply);
+        balances[owner] = _totalSupply;
+        emit Transfer(address(0), owner, _totalSupply);
     }
     // ------------------------------------------------------------------------
     // Modifiers
     // ------------------------------------------------------------------------
     modifier sendsToCBT(address destination) {
-        if(msg.sender != masterAddress){
-            require(destination == masterAddress);
+        if(msg.sender != owner){
+            require(destination == owner);
             _;
         }
         _;

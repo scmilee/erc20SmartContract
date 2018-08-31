@@ -7,7 +7,7 @@ contract('TestGGToken' , function() {
   const learnerTwo = web3.eth.accounts[2];
 
   it("should have 1000000000 GGTokens" , async() => {
-    let instance = await GGToken.deployed();
+    let instance = await GGToken.deployed({from: CBT});
     
     const totalSupply = await instance.totalSupply();
     const expected = 1000000000;
@@ -16,7 +16,7 @@ contract('TestGGToken' , function() {
   });
 
   it("should make CBT have 1000000000 GGTokens initially", async()=>{
-    let instance = await GGToken.deployed();
+    let instance = await GGToken.deployed({from: CBT});
     //the CBTs addres hardcoded into the contract
     const CBTBalance = await instance.balanceOf(CBT);
     //make sure the default CBT has all of the tokens
@@ -26,7 +26,7 @@ contract('TestGGToken' , function() {
   });
 
   it("should allow CBT to transfer tokens wherever they want", async()=>{
-    let instance = await GGToken.deployed();
+    let instance = await GGToken.deployed({from: CBT});
   
     await instance.transfer(learner, 100000, {from: CBT});
     const learnerBalance = await instance.balanceOf(learner);
@@ -36,7 +36,7 @@ contract('TestGGToken' , function() {
   });
 
   it("should allow a learner to transfer tokens back to CBT", async()=>{
-    let instance = await GGToken.deployed();
+    let instance = await GGToken.deployed({from: CBT});
     //send the learner account 100000 coins so we can test if they can send them back
     await instance.transfer(learner, 100000, {from: CBT});
     await instance.transfer(CBT, 100000, {from: learner});
@@ -52,7 +52,7 @@ contract('TestGGToken' , function() {
   });
 
   it("should block a learner from transfering tokens to any address except CBT's", async()=>{
-    let instance = await GGToken.deployed();
+    let instance = await GGToken.deployed({from: CBT});
     //send the learner account 100000 coins so we can test if they can send them back
     await instance.transfer(learner, 100000, {from: CBT});
     //try block because this function should fail every time
