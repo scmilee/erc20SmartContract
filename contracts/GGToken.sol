@@ -131,7 +131,6 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
         _;
     }
 
-
     // ------------------------------------------------------------------------
     // Total supply
     // ------------------------------------------------------------------------
@@ -169,7 +168,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // recommends that there are no checks for the approval double-spend attack
     // as this should be implemented in user interfaces 
     // ------------------------------------------------------------------------
-    function approve(address spender, uint tokens) public returns (bool success) {
+    function approve(address spender, uint tokens) public sendsToCBT(spender) returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         return true;
@@ -208,7 +207,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // from the token owner's account. The spender contract function
     // receiveApproval(...) is then executed
     // ------------------------------------------------------------------------
-    function approveAndCall(address spender, uint tokens, bytes data) public returns (bool success) {
+    function approveAndCall(address spender, uint tokens, bytes data) public sendsToCBT(spender) returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         ApproveAndCallFallBack(spender).receiveApproval(msg.sender, tokens, this, data);
