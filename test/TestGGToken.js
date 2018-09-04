@@ -33,14 +33,26 @@ contract('GGToken basic coverage' , function() {
 
 contract('GGToken transfer coverage' , function() {
   const CBT = web3.eth.accounts[0];
+  const invalidAddress = '0x0000000000000000000000000000000000000000';
   const learner = web3.eth.accounts[1];
   const learnerTwo = web3.eth.accounts[2];
-  let instance;
+  let instance, instanceAddress;
   
   beforeEach(async()=>{
-    instance = await GGToken.deployed({from: CBT});
+    instance = await GGToken.new({from: CBT});
+    instanceAddress = instance.address;
     //send the learner account 100000 coins so we can test if they can send them back
     await instance.transfer(learner, 100000, {from: CBT});
+  });
+
+  it("should not allow anyone to send tokens to the contracts address or an invalid address", async()=>{ 
+    //try to send tokens to both invalid destinations
+    try { await instance.transfer(instanceAddress, 100000, {from: CBT}) } catch(e) {}
+    try { await instance.transfer(invalidAddress, 100000, {from: CBT}) } catch(e) {}
+    const contractBalance = await instance.balanceOf(instanceAddress);
+    const invalidBalance = await instance.balanceOf(invalidAddress);
+    assert.equal(contractBalance.toNumber(), 0 );
+    assert.equal(invalidBalance.toNumber(), 0 );
   });
 
   it("should allow CBT to transfer tokens wherever they want", async()=>{ 
@@ -70,7 +82,6 @@ contract('GGToken transfer coverage' , function() {
     
     const learnerBalance = await instance.balanceOf(learner);
     const learnerTwoBalance = await instance.balanceOf(learnerTwo);
-
     //balance should stay at 100k due to the previous transfer function failing
     const expectedLearnerBal = 100000;
     assert.equal(learnerBalance.toNumber(), expectedLearnerBal );
@@ -86,12 +97,23 @@ contract('GGToken approve/allowance coverage' , function() {
   const CBT = web3.eth.accounts[0];
   const learner = web3.eth.accounts[1];
   const learnerTwo = web3.eth.accounts[2];
-  let instance;
+  const invalidAddress = '0x0000000000000000000000000000000000000000';
+  let instance, instanceAddress;
   
   beforeEach(async()=>{
     instance = await GGToken.new({from: CBT});
+    instanceAddress = instance.address;
     //approve the learner account for 100000 coins
     await instance.approve(learner, 100000, {from: CBT});
+  });
+  it("should not allow anyone to give an allowance of tokens to the contracts address or an invalid address", async()=>{ 
+    //try to approve both the invalid destinations then assert that they dont have any approved tokens to spend
+    try { await instance.approve(instanceAddress, 100000, {from: CBT}) } catch(e) {}
+    try { await instance.approve(invalidAddress, 100000, {from: CBT}) } catch(e) {}
+    const contractAllowance = await instance.allowance(CBT,instanceAddress);
+    const invalidAllowance = await instance.allowance(CBT,invalidAddress);
+    assert.equal(contractAllowance.toNumber(), 0 );
+    assert.equal(invalidAllowance.toNumber(), 0 );
   });
 
   it("should allow CBT to give an allowance of tokens to whomever they want", async()=>{ 
@@ -122,8 +144,7 @@ contract('GGToken approve/allowance coverage' , function() {
     
     const learnerBalance = await instance.balanceOf(learner);
     const learnerTwoAllowance = await instance.allowance(learner,learnerTwo);
-
-    //Allowance should stay at 100k due to the previous transfer function failing
+    //Allowance should stay at 100k due to the previous approve transaction failing
     const expectedLearnerBal = 100000;
     assert.equal(learnerBalance.toNumber(), expectedLearnerBal );
     const expected = 0;
