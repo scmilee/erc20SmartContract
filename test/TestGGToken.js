@@ -27,8 +27,6 @@ contract('GGToken basic coverage' , function() {
     const expected = 1000000000;
     assert.equal(CBTBalance.toNumber(), expected );
   });
-
-
 });
 
 contract('GGToken transfer coverage' , function() {
@@ -51,6 +49,7 @@ contract('GGToken transfer coverage' , function() {
     try { await instance.transfer(invalidAddress, 100000, {from: CBT}) } catch(e) {}
     const contractBalance = await instance.balanceOf(instanceAddress);
     const invalidBalance = await instance.balanceOf(invalidAddress);
+    
     assert.equal(contractBalance.toNumber(), 0 );
     assert.equal(invalidBalance.toNumber(), 0 );
   });
@@ -58,6 +57,7 @@ contract('GGToken transfer coverage' , function() {
   it("should allow CBT to transfer tokens wherever they want", async()=>{ 
     const learnerBalance = await instance.balanceOf(learner);
     const expected = 100000;
+    
     assert.equal(learnerBalance.toNumber(), expected );
   });
 
@@ -67,30 +67,21 @@ contract('GGToken transfer coverage' , function() {
     const learnerBalance = await instance.balanceOf(learner);
     const CBTBalance = await instance.balanceOf(CBT);
 
-    const expectedLearnerBal = 0;
-    assert.equal(learnerBalance.toNumber(), expectedLearnerBal );
-    const expected = 1000000000;
-    assert.equal(CBTBalance.toNumber(), expected );
-
+    assert.equal(learnerBalance.toNumber(), 0 );
+    assert.equal(CBTBalance.toNumber(), 1000000000 );
   });
 
   it("should block a learner from transfering tokens to any address except CBT's", async()=>{
     //try block because this function should fail every time
-    try {
-      await instance.transfer(learnerTwo, 100000, {from: learner})
-    } catch(e) {}
-    
+    try { await instance.transfer(learnerTwo, 100000, {from: learner}) } catch(e) {}  
     const learnerBalance = await instance.balanceOf(learner);
     const learnerTwoBalance = await instance.balanceOf(learnerTwo);
     //balance should stay at 100k due to the previous transfer function failing
-    const expectedLearnerBal = 100000;
-    assert.equal(learnerBalance.toNumber(), expectedLearnerBal );
-    const expected = 0;
-    assert.equal(learnerTwoBalance.toNumber(), expected );
 
+    assert.equal(learnerBalance.toNumber(), 100000 );
+    assert.equal(learnerTwoBalance.toNumber(), 0 );
   })
 });
-
 
 contract('GGToken approve/allowance coverage' , function() {
   
@@ -112,6 +103,7 @@ contract('GGToken approve/allowance coverage' , function() {
     try { await instance.approve(invalidAddress, 100000, {from: CBT}) } catch(e) {}
     const contractAllowance = await instance.allowance(CBT,instanceAddress);
     const invalidAllowance = await instance.allowance(CBT,invalidAddress);
+   
     assert.equal(contractAllowance.toNumber(), 0 );
     assert.equal(invalidAllowance.toNumber(), 0 );
   });
@@ -119,6 +111,7 @@ contract('GGToken approve/allowance coverage' , function() {
   it("should allow CBT to give an allowance of tokens to whomever they want", async()=>{ 
     const learnerAllowance = await instance.allowance(CBT,learner);
     const expected = 100000;
+    
     assert.equal(learnerAllowance.toNumber(), expected );
   });
 
@@ -126,29 +119,22 @@ contract('GGToken approve/allowance coverage' , function() {
     //transfer the approved coins to the learner then give cbt approval to do the same from the learner
     await instance.transferFrom(CBT, learner ,100000, {from: learner});
     await instance.approve(CBT, 100000, {from: learner});
-
     const learnerAllowance = await instance.allowance(CBT ,learner);
     const CBTAllowance = await instance.allowance(learner ,CBT);
-    const expectedLearnerAllownce = 0;
-    assert.equal(learnerAllowance.toNumber(), expectedLearnerAllownce );
-    const expected = 100000;
-    assert.equal(CBTAllowance.toNumber(), expected );
+
+    assert.equal(learnerAllowance.toNumber(), 0 );
+    assert.equal(CBTAllowance.toNumber(), 100000 );
   });
 
   it("should block a learner from transfering tokens to any address except CBT's", async()=>{
     //try block because this function should fail every time
     await instance.transferFrom(CBT, learner ,100000, {from: learner});
-    try {
-      await instance.approve(learnerTwo, 100000, {from: learner})
-    } catch(e) {}
-    
+    try { await instance.approve(learnerTwo, 100000, {from: learner}) } catch(e) {}
     const learnerBalance = await instance.balanceOf(learner);
     const learnerTwoAllowance = await instance.allowance(learner,learnerTwo);
     //Allowance should stay at 100k due to the previous approve transaction failing
-    const expectedLearnerBal = 100000;
-    assert.equal(learnerBalance.toNumber(), expectedLearnerBal );
-    const expected = 0;
-    assert.equal(learnerTwoAllowance.toNumber(), expected );
 
+    assert.equal(learnerBalance.toNumber(), 100000 );
+    assert.equal(learnerTwoAllowance.toNumber(), 0 );
   });
 });
