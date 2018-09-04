@@ -123,11 +123,16 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // ------------------------------------------------------------------------
     // Modifiers
     // ------------------------------------------------------------------------
-    modifier sendsToCBT(address destination) {
+    modifier sendsToCBT(address to) {
         if(msg.sender != owner){
-            require(destination == owner);
+            require(to == owner);
             _;
         }
+        _;
+    }
+    modifier validDestination( address to ) {
+        require(to != address(0x0));
+        require(to != address(this) );
         _;
     }
 
@@ -152,7 +157,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // - Owner's account must have sufficient balance to transfer
     // - 0 value transfers are allowed
     // ------------------------------------------------------------------------
-    function transfer(address to, uint tokens) public sendsToCBT(to) returns (bool success) {
+    function transfer(address to, uint tokens) public sendsToCBT(to) validDestination(to) returns (bool success) {
         balances[msg.sender] = safeSub(balances[msg.sender], tokens);
         balances[to] = safeAdd(balances[to], tokens);
         emit Transfer(msg.sender, to, tokens);
@@ -168,7 +173,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // recommends that there are no checks for the approval double-spend attack
     // as this should be implemented in user interfaces 
     // ------------------------------------------------------------------------
-    function approve(address spender, uint tokens) public sendsToCBT(spender) returns (bool success) {
+    function approve(address spender, uint tokens) public sendsToCBT(spender) validDestination(to) returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         return true;
@@ -207,7 +212,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // from the token owner's account. The spender contract function
     // receiveApproval(...) is then executed
     // ------------------------------------------------------------------------
-    function approveAndCall(address spender, uint tokens, bytes data) public sendsToCBT(spender) returns (bool success) {
+    function approveAndCall(address spender, uint tokens, bytes data) public sendsToCBT(spender) validDestination(to) returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         ApproveAndCallFallBack(spender).receiveApproval(msg.sender, tokens, this, data);
