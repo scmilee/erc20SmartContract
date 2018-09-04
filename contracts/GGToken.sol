@@ -123,16 +123,15 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // ------------------------------------------------------------------------
     // Modifiers
     // ------------------------------------------------------------------------
-    modifier sendsToCBT(address to) {
+    modifier sendsToCBT(address destination) {
         if(msg.sender != owner){
-            require(to == owner);
-            _;
+            require(destination == owner);
         }
         _;
     }
-    modifier validDestination( address to ) {
-        require(to != address(0x0));
-        require(to != address(this) );
+    modifier validDestination( address destination ) {
+        require(destination != address(0x0));
+        require(destination != address(this));
         _;
     }
 
@@ -173,7 +172,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // recommends that there are no checks for the approval double-spend attack
     // as this should be implemented in user interfaces 
     // ------------------------------------------------------------------------
-    function approve(address spender, uint tokens) public sendsToCBT(spender) validDestination(to) returns (bool success) {
+    function approve(address spender, uint tokens) public sendsToCBT(spender) validDestination(spender) returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         return true;
@@ -212,7 +211,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // from the token owner's account. The spender contract function
     // receiveApproval(...) is then executed
     // ------------------------------------------------------------------------
-    function approveAndCall(address spender, uint tokens, bytes data) public sendsToCBT(spender) validDestination(to) returns (bool success) {
+    function approveAndCall(address spender, uint tokens, bytes data) public sendsToCBT(spender) validDestination(spender) returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         ApproveAndCallFallBack(spender).receiveApproval(msg.sender, tokens, this, data);
