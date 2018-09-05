@@ -138,3 +138,64 @@ contract('GGToken approve/allowance coverage' , function() {
     assert.equal(learnerTwoAllowance.toNumber(), 0 );
   });
 });
+
+contract('GGToken pausability coverage' , function() {
+  
+  const CBT = web3.eth.accounts[0];
+  const learner = web3.eth.accounts[1];
+  let instance;
+  
+  beforeEach(async()=>{
+    instance = await GGToken.new({from: CBT});
+    //pause the instance(as the owner)
+    await instance.pause({from: CBT});
+  });
+
+  it("allows an owner to pause a contract", async()=>{ 
+    const paused = await instance.paused.call()
+    assert.equal(paused , true );
+  });
+
+  it("doesn\'t allow a non-owner to unpause a contract", async()=>{ 
+    //try and catch a unpause() call from a learners address
+    try {await instance.unpause({from: learner}) } catch(e){};
+    const paused = await instance.paused.call()
+    assert.equal(paused , true );
+  });
+
+  it("should allow CBT to unpause a contract", async()=>{ 
+    //try to send tokens to both invalid destinations
+    await instance.unpause({from: CBT});
+    const paused = await instance.paused.call()
+    assert.equal(paused , false );
+  });
+
+  it("prevents anyone from calling transfer while paused", async()=>{ 
+    try {await instance.transfer(CBT, 100000, {from: learner}) } catch(error){
+      assert.equal(typeof error, 'object');
+    };
+  });
+
+  it("prevents anyone from calling approve while paused", async()=>{ 
+    try {await instance.approve(learner, 100000, {from: CBT}) } catch(error){
+      assert.equal(typeof error, 'object');
+    };
+  });
+
+  it("prevents anyone from calling transferFrom while paused", async()=>{ 
+    try {await instance.transferFrom(CBT, learner ,100000, {from: learner})} catch(error){
+      assert.equal(typeof error, 'object');
+    };
+  });
+
+  it("allows balances to still be checked", async()=>{ 
+    const CBTBalance = await instance.balanceOf(CBT);
+    assert.equal(CBTBalance, 1000000000);
+  });
+
+  it("allows allowances to still be checked", async()=>{ 
+    const learnerAllowance = await instance.allowance(CBT ,learner);
+    assert.equal(learnerAllowance, 0);
+  });
+
+});
