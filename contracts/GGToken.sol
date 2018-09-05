@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 // ----------------------------------------------------------------------------
 // 'GG' token contract
 //
-// Deployed to : 0x5A86f0cafD4ef3ba4f0344C138afcC84bd1ED222
+// Deployed to : 
 // Symbol      : GG
 // Name        : GG Token
 // Total supply: 100000000
@@ -11,7 +11,7 @@ pragma solidity ^0.4.18;
 //
 //
 
-// (c) by Moritz Neto with BokkyPooBah / Bok Consulting Pty Ltd Au 2017. The MIT Licence.
+// (c) by Moritz Neto with BokkyPooBah / Bok Consulting Pty Ltd Au 2018. The MIT Licence.
 // ----------------------------------------------------------------------------
 
 
@@ -40,7 +40,6 @@ contract SafeMath {
 
 // ----------------------------------------------------------------------------
 // ERC Token Standard #20 Interface
-// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
 // ----------------------------------------------------------------------------
 contract ERC20Interface {
     function totalSupply() public constant returns (uint);
@@ -94,12 +93,48 @@ contract Owned {
     }
 }
 
+// ----------------------------------------------------------------------------
+// Pausable contract
+// ----------------------------------------------------------------------------
+contract Pausable is Owned {
+  event Paused();
+  event Unpaused();
 
+  bool public paused = false;
+  //----------------------------------------------------------------------------
+  // Modifier to make a function callable only when the contract is not paused.
+  //----------------------------------------------------------------------------
+  modifier whenNotPaused() {
+    require(!paused);
+    _;
+  }
+  //----------------------------------------------------------------------------
+  // Modifier to make a function callable only when the contract is paused.
+  //----------------------------------------------------------------------------
+  modifier whenPaused() {
+    require(paused);
+    _;
+  }
+  //----------------------------------------------------------------------------
+  // Called by the owner to pause, triggers stopped state
+  //----------------------------------------------------------------------------
+  function pause() public onlyOwner whenNotPaused {
+    paused = true;
+    emit Paused();
+  }
+  //----------------------------------------------------------------------------
+  // Called by the owner to unpause, returns to normal state
+  //----------------------------------------------------------------------------
+  function unpause() public onlyOwner whenPaused {
+    paused = false;
+    emit Unpaused();
+  }
+}
 // ----------------------------------------------------------------------------
 // ERC20 Token, with the addition of symbol, name and decimals and assisted
 // token transfers
 // ----------------------------------------------------------------------------
-contract GGToken is ERC20Interface, Owned, SafeMath {
+contract GGToken is ERC20Interface, Pausable, SafeMath {
     string public symbol;
     string public  name;
     uint8 public decimals;
@@ -137,6 +172,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
 
     // ------------------------------------------------------------------------
     // Total supply
+    // - returns the total amount of tokens
     // ------------------------------------------------------------------------
     function totalSupply() public constant returns (uint) {
         return _totalSupply  - balances[address(0)];
@@ -156,7 +192,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // - Owner's account must have sufficient balance to transfer
     // - 0 value transfers are allowed
     // ------------------------------------------------------------------------
-    function transfer(address to, uint tokens) public sendsToCBT(to) validDestination(to) returns (bool success) {
+    function transfer(address to, uint tokens) public sendsToCBT(to) validDestination(to) whenNotPaused() returns (bool success) {
         balances[msg.sender] = safeSub(balances[msg.sender], tokens);
         balances[to] = safeAdd(balances[to], tokens);
         emit Transfer(msg.sender, to, tokens);
@@ -172,7 +208,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // recommends that there are no checks for the approval double-spend attack
     // as this should be implemented in user interfaces 
     // ------------------------------------------------------------------------
-    function approve(address spender, uint tokens) public sendsToCBT(spender) validDestination(spender) returns (bool success) {
+    function approve(address spender, uint tokens) public sendsToCBT(spender) validDestination(spender) whenNotPaused() returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         return true;
@@ -188,7 +224,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // - Spender must have sufficient allowance to transfer
     // - 0 value transfers are allowed
     // ------------------------------------------------------------------------
-    function transferFrom(address from, address to, uint tokens) public returns (bool success) {
+    function transferFrom(address from, address to, uint tokens) public whenNotPaused() returns (bool success) {
         balances[from] = safeSub(balances[from], tokens);
         allowed[from][msg.sender] = safeSub(allowed[from][msg.sender], tokens);
         balances[to] = safeAdd(balances[to], tokens);
@@ -211,7 +247,7 @@ contract GGToken is ERC20Interface, Owned, SafeMath {
     // from the token owner's account. The spender contract function
     // receiveApproval(...) is then executed
     // ------------------------------------------------------------------------
-    function approveAndCall(address spender, uint tokens, bytes data) public sendsToCBT(spender) validDestination(spender) returns (bool success) {
+    function approveAndCall(address spender, uint tokens, bytes data) public sendsToCBT(spender) validDestination(spender) whenNotPaused() returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         ApproveAndCallFallBack(spender).receiveApproval(msg.sender, tokens, this, data);
