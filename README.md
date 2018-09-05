@@ -3,7 +3,7 @@
 ## Installation:
 ~~~
 npm install truffle -g
-git clone git@github.com:scmilee/smartcontract.git
+git clone https://github.com/scmilee/erc20SmartContract.git
 cd smartcontract
 npm install
 truffle test
