@@ -9,7 +9,7 @@ npm install
 truffle test
 ~~~
 
-##Team(only add your own name):
+## Team(only add your own name):
 - Dylan Drudge https://github.com/scmilee
 
 ## Inspiration and gratitude: 
